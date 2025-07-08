@@ -34,9 +34,7 @@ type Action struct {
 }
 
 // This function simulates detecting problems in a cluster.
-// In a real scenario, this would connect to Kubernetes/AWS APIs.
 func getSimulatedStatus() MVPStatus {
-	// Hardcoded data for the MVP
 	problem := Problem{
 		ID:        "p-123",
 		Resource:  "pod/auth-service-7d5b",
@@ -68,13 +66,13 @@ func main() {
 	// API endpoint
 	r.HandleFunc("/api/status", statusHandler).Methods("GET")
 
-	// CORS handler
+	// CORS handler to allow requests from the frontend
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	originsOk := handlers.AllowedOrigins([]string{"*"}) // Be more specific in production
-	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	originsOk := handlers.AllowedOrigins([]string{"*"}) // For MVP; be more specific in production
+	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "OPTIONS"})
 
 	log.Println("SREnity MVP Backend starting on port 8000")
+
 	// Start server with CORS middleware
 	log.Fatal(http.ListenAndServe(":8000", handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
-```jsx
