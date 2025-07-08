@@ -1,0 +1,13 @@
+steps:
+# Build the backend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/srenity-mvp-repo/backend:latest', './backend']
+
+# Build the frontend image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '${_REGION}-docker.pkg.dev/${PROJECT_ID}/srenity-mvp-repo/frontend:latest', './frontend']
+
+# Push both images to Artifact Registry
+images:
+- '${_REGION}-docker.pkg.dev/${PROJECT_ID}/srenity-mvp-repo/backend:latest'
+- '${_REGION}-docker.pkg.dev/${PROJECT_ID}/srenity-mvp-repo/frontend:latest'
