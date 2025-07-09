@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SREnity - Console</title>
+    <style>
+        /* A modern CSS reset */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        /* Using a modern, variable system font stack */
+        :root {
+            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+            --bg-primary: #0a0a0a;      /* Near black */
+            --bg-secondary: #111111;   /* Slightly lighter black */
+            --border-color: #262626;   /* gray-800 */
+            --text-primary: #f5f5f5;     /* gray-100 */
+            --text-secondary: #a3a3a3; /* gray-400 */
+            --text-tertiary: #525252;  /* gray-600 */
+            --accent-primary: #f5f5f5;   /* White for active state */
+            --status-red: #ef4444;
+            --status-yellow: #f59e0b;
+            --status-green: #22c55e;
+        }
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: auto 1fr;
+            height: 100vh;
+            grid-template-areas:
+                "header header"
+                "sidebar main";
+        }
+
+        .header {
+            grid-area: header;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .logo { display: flex; align-items: center; gap: 0.75rem; }
+        .logo-text { font-size: 1.125rem; font-weight: 500; }
+        .main-nav { display: flex; align-items: center; gap: 1.5rem; }
+        .main-nav a {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+            padding: 0.5rem 0;
+        }
+        .main-nav a:hover { color: var(--text-primary); }
+        .main-nav a.active { color: var(--text-primary); }
+
+        .sidebar {
+            grid-area: sidebar;
+            padding: 1.5rem;
+            border-right: 1px solid var(--border-color);
+            background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .sidebar-group-title {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 0 0.5rem;
+        }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 0.25rem; }
+        .sidebar-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.625rem 0.5rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 0.875rem;
+        }
+        .sidebar-btn:hover { background-color: var(--border-color); color: var(--text-primary); }
+        .sidebar-btn.active { background-color: var(--bg-secondary); color: var(--text-primary); }
+        .sidebar-btn .icon { margin-right: 0.75rem; font-size: 1rem; flex-shrink: 0; }
+        .sidebar-btn .count {
+            margin-left: auto;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 400;
+            flex-shrink: 0;
+        }
+        
+        #sidebar-filters { border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+        .filter-group label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+        .filter-group select {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--text-tertiary);
+            color: var(--text-primary);
+            border-radius: 0.375rem;
+            padding: 0.375rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .main-content {
+            grid-area: main;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+        .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .main-title { font-size: 1.5rem; font-weight: 500; }
+        
+        .findings-list {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+        .list-header {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 110px;
+            gap: 1rem;
+            padding: 0.75rem 1.25rem;
+            background-color: var(--bg-secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .list-row {
+            display: grid;
+            grid-template-columns: minmax(0, 3fr) minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 110px;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            font-size: 0.875rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        .list-row:last-child { border-bottom: none; }
+        .list-row:hover { background-color: var(--bg-secondary); }
+        .list-cell {
+            min-width: 0; /* Important for grid truncation */
+        }
+        .status-cell { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
+        .status-dot { width: 0.5rem; height: 0.5rem; border-radius: 9999px; flex-shrink: 0; }
+        .action-cell { text-align: right; }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+            border: 1px solid var(--text-tertiary);
+            border-radius: 6px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+            transition: background-color 0.2s, box-shadow 0.2s, transform 0.1s;
+        }
+        .action-btn:hover {
+            background-color: var(--text-secondary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transform: translateY(-1px);
+        }
+        .action-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+
+        .placeholder-view { padding: 2rem; text-align: center; color: var(--text-secondary); }
+
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 0; /* Key fix for flexbox children */
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app" class="app-container">
+        <header class="header">
+            <div class="logo">
+                <svg height="24" viewBox="0 0 32 32"><defs><linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color: #a3a3a3" /><stop offset="100%" style="stop-color: #f5f5f5" /></linearGradient></defs><path d="M16,0 A16,16 0 0,1 32,16 L28,16 A12,12 0 0,0 16,4 Z M16,32 A16,16 0 0,1 0,16 L4,16 A12,12 0 0,0 16,28 Z" fill="url(#logoGradient)"/></svg>
+                <span class="logo-text">SREnity</span>
+            </div>
+            <nav class="main-nav">
+                <a href="#" data-view="console" class="active">Console</a>
+                <a href="#" data-view="environments">Environments</a>
+                <a href="#" data-view="workflows">Workflows</a>
+            </nav>
+        </header>
+
+        <aside id="sidebar" class="sidebar">
+            <div>
+                <h2 class="sidebar-group-title">Domains</h2>
+                <nav id="sidebar-nav" class="sidebar-nav">
+                    <!-- Sidebar buttons will be injected by JS -->
+                </nav>
+            </div>
+            <div id="sidebar-filters">
+                <h2 class="sidebar-group-title">Filters</h2>
+                <div id="filters-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <!-- Filter dropdowns will be injected by JS -->
+                </div>
+            </div>
+        </aside>
+
+        <main id="main-content" class="main-content">
+            <!-- Content will be injected by JS -->
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const state = {
+                currentView: 'console',
+                activeDomain: 'overview',
+                filters: {
+                    environment: 'all',
+                    severity: 'all',
+                    owning_team: 'all'
+                }
+            };
+
+            const data = {
+                reliability: [
+                    { id: 1, title: 'CrashLoopBackOff Pods', env: 'gcp-prod-cluster-us-central1-a-very-long-name', severity: 'CRITICAL', owning_team: 'Checkout', action: 'Triage' },
+                    { id: 2, title: 'API Server Latency Anomaly', env: 'aws-prod-eks', severity: 'WARNING', owning_team: 'Infra', action: 'Investigate' },
+                ],
+                cost: [
+                    { id: 4, title: 'Unattached EBS Volumes', env: 'aws-prod-eks', severity: 'INFO', owning_team: 'Platform', action: 'Cleanup' },
+                ],
+                performance: [
+                    { id: 6, title: 'Underutilized Nodes', env: 'gcp-prod-cluster', severity: 'INFO', owning_team: 'Infra', action: 'Cordon & Drain' },
+                ],
+                security: [
+                    { id: 7, title: 'Public S3 Buckets with extremely long names to test truncation', env: 'aws-prod-eks', severity: 'CRITICAL', owning_team: 'Security', action: 'Remediate' },
+                    { id: 8, title: 'Pods with Privileged Access', env: 'gcp-prod-cluster', severity: 'WARNING', owning_team: 'Security', action: 'Audit' },
+                ]
+            };
+            
+            const domains = [
+                { id: 'overview', name: 'Overview', icon: '🔭' },
+                { id: 'reliability', name: 'Reliability', icon: '🛡️' },
+                { id: 'cost_optimization', name: 'Cost Optimization', icon: '💰' },
+                { id: 'performance', name: 'Performance', icon: '⚡️' },
+                { id: 'security', name: 'Security', icon: '🔒' }
+            ];
+
+            const mainContent = document.getElementById('main-content');
+            const sidebarNav = document.getElementById('sidebar-nav');
+            const filtersContainer = document.getElementById('filters-container');
+            const mainNav = document.querySelector('.main-nav');
+
+            function getUniqueValues(key) {
+                return ['all', ...new Set(data.reliability.concat(data.cost, data.performance, data.security).map(item => item[key]))];
+            }
+
+            function renderFilters() {
+                const filterConfigs = [
+                    { key: 'environment', label: 'Environment' },
+                    { key: 'severity', label: 'Severity' },
+                    { key: 'owning_team', label: 'Owning Team' }
+                ];
+
+                filtersContainer.innerHTML = filterConfigs.map(config => {
+                    const options = getUniqueValues(config.key).map(value => 
+                        `<option value="${value}" ${state.filters[config.key] === value ? 'selected' : ''}>${value === 'all' ? 'All' : value}</option>`
+                    ).join('');
+                    return `
+                        <div class="filter-group">
+                            <label for="${config.key}-filter">${config.label}</label>
+                            <select id="${config.key}-filter" data-filter-key="${config.key}">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function getFindings() {
+                const allFindings = Object.values(data).flat();
+                let findings;
+
+                if (state.activeDomain === 'overview') {
+                    findings = allFindings;
+                } else if (state.activeDomain === 'cost_optimization') {
+                    findings = data.cost;
+                } else {
+                    findings = data[state.activeDomain] || [];
+                }
+
+                return findings.filter(item => {
+                    return Object.entries(state.filters).every(([key, value]) => {
+                        return value === 'all' || item[key] === value;
+                    });
+                });
+            }
+            
+            function getDomainCount(domainId) {
+                if (domainId === 'overview') {
+                    return Object.values(data).flat().length;
+                }
+                 if (domainId === 'cost_optimization') {
+                    return data.cost.length;
+                }
+                return data[domainId] ? data[domainId].length : 0;
+            }
+
+            function renderSidebarNav() {
+                sidebarNav.innerHTML = domains.map(domain => `
+                    <button class="sidebar-btn ${state.activeDomain === domain.id ? 'active' : ''}" data-domain="${domain.id}">
+                        <span class="icon">${domain.icon}</span>
+                        <span class="truncate" title="${domain.name}">${domain.name}</span>
+                        <span class="count">${getDomainCount(domain.id)}</span>
+                    </button>
+                `).join('');
+            }
+            
+            function renderConsoleView() {
+                const findings = getFindings();
+                const domainName = domains.find(f => f.id === state.activeDomain).name;
+                
+                const listHeader = `
+                    <div class="list-header">
+                        <span>Finding</span>
+                        <span>Environment</span>
+                        <span>Severity</span>
+                        <span>Owning Team</span>
+                        <span style="text-align: right;">Action</span>
+                    </div>`;
+
+                let findingsHtml = '';
+                if (findings.length > 0) {
+                    findingsHtml = findings.map(finding => {
+                        let statusColor = 'var(--status-yellow)';
+                        if (finding.severity === 'CRITICAL') statusColor = 'var(--status-red)';
+                        if (finding.severity === 'INFO') statusColor = 'var(--status-green)';
+                        
+                        return `
+                            <div class="list-row">
+                                <div class="status-cell">
+                                    <span class="status-dot" style="background-color: ${statusColor};"></span>
+                                    <span class="truncate" style="color: var(--text-primary); font-weight: 500;" title="${finding.title}">${finding.title}</span>
+                                </div>
+                                <div class="list-cell truncate" title="${finding.env}">${finding.env}</div>
+                                <div class="list-cell" style="color: ${statusColor};">${finding.severity}</div>
+                                <div class="list-cell truncate" title="${finding.owning_team}">${finding.owning_team}</div>
+                                <div class="action-cell">
+                                    <button class="action-btn">${finding.action}</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    findingsHtml = `<div class="placeholder-view">No findings match the current filters.</div>`;
+                }
+
+                mainContent.innerHTML = `
+                    <div class="main-header">
+                        <h1 class="main-title">${domainName}</h1>
+                    </div>
+                    <div class="findings-list">
+                        ${listHeader}
+                        <div id="findings-container">${findingsHtml}</div>
+                    </div>
+                `;
+            }
+
+            function renderView() {
+                mainNav.querySelectorAll('a').forEach(a => a.classList.toggle('active', a.dataset.view === state.currentView));
+                
+                const sidebar = document.getElementById('sidebar');
+                if (state.currentView === 'console') {
+                    sidebar.style.display = 'flex';
+                    renderSidebarNav();
+                    renderFilters();
+                    renderConsoleView();
+                } else {
+                    sidebar.style.display = 'none';
+                    mainContent.innerHTML = `<div class="placeholder-view">The <strong>${state.currentView}</strong> section is where you would manage your ${state.currentView}. Add or Manage Envs. Checking current connection Status</div>`;
+                }
+            }
+
+            sidebarNav.addEventListener('click', e => {
+                const button = e.target.closest('.sidebar-btn');
+                if (button) {
+                    state.activeDomain = button.dataset.domain;
+                    renderSidebarNav();
+                    renderConsoleView();
+                }
+            });
+
+            filtersContainer.addEventListener('change', e => {
+                const key = e.target.dataset.filterKey;
+                if (key) {
+                    state.filters[key] = e.target.value;
+                    renderConsoleView();
+                }
+            });
+
+            mainNav.addEventListener('click', e => {
+                e.preventDefault();
+                const link = e.target.closest('a');
+                if (link) {
+                    state.currentView = link.dataset.view;
+                    renderView();
+                }
+            });
+
+            renderView();
+        });
+    </script>
+</body>
+</html>
